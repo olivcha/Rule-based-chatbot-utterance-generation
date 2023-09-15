@@ -38,12 +38,9 @@ with torch.no_grad():
 #     # empathy_model.load_state_dict(torch.load('second_try/best_model_first_ft.pt', map_location=torch.device(DEVICE)), strict=False) #change path
     
     empathy_model_2 = EmpathyClassificationModel(AutoModelWithLMHead.from_pretrained("roberta-base").base_model, len(labels))
-    empathy_model_2.load_state_dict(torch.load('second_try/best_model_second_ft.pt', map_location=torch.device(DEVICE)), strict=False) #change path
+    empathy_model_2.load_state_dict(torch.load('../../empathy_output/best_model_first_ft.pt', map_location=torch.device(DEVICE)), strict=False) #change path
     empathy_model_2 = empathy_model_2.to(DEVICE)
     
-    empathy_model_3 = EmpathyClassificationModel(AutoModelWithLMHead.from_pretrained("roberta-base").base_model, len(labels))
-    empathy_model_3.load_state_dict(torch.load('fourth_try/best_model_second_ft_1_triple.pt', map_location=torch.device(DEVICE)), strict=False) #change path
-    empathy_model_3 = empathy_model_3.to(DEVICE)
 
 def get_empathy(text, model): # roberta
     '''
@@ -87,7 +84,7 @@ if __name__ == "__main__":
         print('using cpu')
         logging.info('Using CPU')
     
-    score_data_path = "data/new_utterances (3).csv"
+    score_data_path = "data/new_utterances.csv"
     
     # tokenizer = AutoTokenizer.from_pretrained('roberta-base')
     # model = AutoModelWithLMHead.from_pretrained("roberta-base")
@@ -102,61 +99,25 @@ if __name__ == "__main__":
     # model.eval().to(device)
     
     # load the dataset to generate scores
-    dataset = pd.read_csv(score_data_path,header=0, usecols=['empathetic_rewriting_new']).dropna()
+    dataset = pd.read_csv(score_data_path,header=0, usecols=['empathetic_rewriting']).dropna()
     # dataset = pd.read_csv(score_data_path,header=0, usecols=['Response']).dropna()
 
-    scores_3 = []
+    scores = []
     
-    # for i in dataset.itertuples():
-    #     print(i[1])
-    #     # print(j)
-    #     print(type(i))
-    #     # print(type(j))
-
-    # sentence = "It's great that you recognize the importance of curiosity when it comes to exploring and discovering new things. Staying curious is the key to staying creative. I'm glad you know that curiosity can be practiced too! Let me know if you need any help or support in pursuing your passion and staying curious. I'm always here for you!"
-    # score_3 = get_empathy(sentence, empathy_model_3)
-    # score_2 = get_empathy(sentence, empathy_model_2)
-    
-    # print(sentence)
-    # print("score_3: ", str(score_3))
-    # print("score_2: ", str(score_2))
-    
-    print("generating scores with 3ft model...")
-    for row in dataset.itertuples():
-        sentence = row[1]
-        # print(sentence)
-        score = get_empathy(sentence, empathy_model_3)
-        print("score (3ft): ", str(score))
-        score_numeric = label2int[score]
-        # print("score numeric: ", str(score_numeric))
-        scores_3.append(score_numeric)
-        
-    # add the scores to the CSV file
-    data = pd.read_csv(score_data_path)
-    data['NEWempathy_score_triple'] = pd.Series(scores_3)
-    data.to_csv(score_data_path, index=False)
-    
-    # add the scores to the CSV file
-    # data = pd.read_csv(score_data_path)
-    # data['empathy_score_1FT_sentence'] = pd.Series(scores_1)
     
     print("generating scores with 2ft model...")
-    scores_2 = []
+    scores = []
     for row in dataset.itertuples():
         sentence = row[1]
-        score = get_empathy(sentence, empathy_model_3)
+        score = get_empathy(sentence, empathy_model_2)
         print("score: ", str(score))
         score_numeric = label2int[score]
         # print("score numeric: ", str(score_numeric))
-        scores_2.append(score_numeric)
+        scores.append(score_numeric)
         
-    # # # add the scores to the CSV file
-    # data = pd.read_csv(score_data_path)
-    # data['empathy_score'] = scores
-    # data.to_csv(score_data_path, index=False)
-    
+
     # add the scores to the CSV file
-    data = pd.read_csv(score_data_path)
-    data['NEWempathy_score_2'] = pd.Series(scores_2)
+    data = pd.read_csv("data/new.csv")
+    data['empathy_score'] = pd.Series(scores)
 
     data.to_csv(score_data_path, index=False)
